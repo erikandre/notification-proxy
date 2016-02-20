@@ -26,7 +26,7 @@ var server = net.createServer(
       }
       try {
         console.log(data.toString());
-        processCommand(JSON.parse(data.toString()), client);
+        processClientCommand(JSON.parse(data.toString()), client);
       }
       catch(err) {
         console.error('Ignoring invalid input');
@@ -76,17 +76,19 @@ function handlePost(request, response) {
 	if (parsedUrl.pathname == '/notify') {
 		handleNotify(parsedUrl, request, response);
 	}
+  else if (parsedUrl.pathname == '/broadcast') {
+		handleBroadcast(parsedUrl, request, response);
+	}
 }
 
+/**
+* Send a message to all clients registered with a specific id
+*/
 function handleNotify(url, request, response) {
   var params = qs.parse(url.query);
   var id = params['id'];
-  var body = "";
-  request.on('data', function(chunk) {
-		body += chunk;
-	});
-	request.on('end', function() {
-		var clients = getClientsForId(id);
+  readRequestBody(request, function(body) {
+    var clients = getClientsForId(id);
     if (clients != null) {
       clients.forEach(function(client) {
           client.write(body);
@@ -98,6 +100,37 @@ function handleNotify(url, request, response) {
       response.writeHead(404);
   		response.end();
     }
+  });
+}
+
+/**
+* Send a broadcast message to all connected clients
+*/
+function handleBroadcast(url, request, response) {
+  readRequestBody(request, function(body) {
+    count = 0;
+    clients.forEach(function(client) {
+        try {
+          client.write(body);
+          count++;
+        }
+        catch(err) {
+          // Ignored
+        }
+        response.writeHead(200);
+    		response.end();
+    });
+    console.log('Successfully sent broadcast to ' + count + ' out of ' + clients.length + ' clients');
+  });
+}
+
+function readRequestBody(request, callback) {
+  var body = "";
+  request.on('data', function(chunk) {
+		body += chunk;
+	});
+	request.on('end', function() {
+		callback(body);
 	});
 }
 
@@ -107,7 +140,7 @@ function serveStats(response) {
   response.end();
 }
 
-function processCommand(command, client) {
+function processClientCommand(command, client) {
   if (command.type == 'register') {
     var id = command.value;
     if (!id2clients.hasOwnProperty(id)) {
