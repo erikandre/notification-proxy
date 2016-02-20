@@ -61,6 +61,7 @@ http.createServer(
       }
     }
     catch (err) {
+      console.error(err);
       response.writeHead(500);
       response.end();
     }
