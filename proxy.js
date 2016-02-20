@@ -105,10 +105,12 @@ function handleNotify(url, request, response) {
   var params = qs.parse(url.query);
   var id = params['id'];
   readRequestBody(request, function(body) {
+    var count = 0;
     var clients = getClientsForId(id);
     if (clients != null) {
       clients.forEach(function(client) {
           client.write(body);
+          count++;
       });
       response.writeHead(200);
   		response.end();
@@ -117,6 +119,7 @@ function handleNotify(url, request, response) {
       response.writeHead(404);
   		response.end();
     }
+    console.log('Notified ' + count + ' clients');
   });
 }
 
