@@ -8,9 +8,19 @@ var qs = require('querystring');
 const clientPort = 9000;
 const controlPort = 9001;
 
+var args = process.argv;
+args.splice(0, 2); // Remove 'node' and the name of the script
+
 var clients = [];
 var id2clients = {};
 var client2id = {};
+
+if (args.length < 1) {
+  console.error('Usage:');
+	console.error('./proxy.js <key>');
+	process.exit(1);
+}
+var commandKey = args[0];
 
 var server = net.createServer(
   function(client) {
@@ -56,7 +66,7 @@ http.createServer(
     }
   }
 ).listen(controlPort, function(err) {
-  console.log('Listening for control commands on port ' + controlPort);
+  console.log('Listening for control commands on port ' + controlPort + ' using key: ' + commandKey);
 });
 
 function handleGet(request, response) {
@@ -73,6 +83,12 @@ function handleGet(request, response) {
 function handlePost(request, response) {
 	console.log('POST URL: ' + request.url);
 	var parsedUrl = url.parse(request.url);
+  var params = qs.parse(parsedUrl.query);
+  if (params.key != commandKey) {
+    response.writeHead(403);
+    response.end();
+    return;
+  }
 	if (parsedUrl.pathname == '/notify') {
 		handleNotify(parsedUrl, request, response);
 	}
@@ -117,10 +133,10 @@ function handleBroadcast(url, request, response) {
         catch(err) {
           // Ignored
         }
-        response.writeHead(200);
-    		response.end();
     });
     console.log('Successfully sent broadcast to ' + count + ' out of ' + clients.length + ' clients');
+    response.writeHead(200);
+    response.end();
   });
 }
 
