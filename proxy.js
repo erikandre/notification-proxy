@@ -108,10 +108,23 @@ function handleNotify(url, request, response) {
     var count = 0;
     var clients = getClientsForId(id);
     if (clients != null) {
+      var deadClients = [];
       clients.forEach(function(client) {
-          client.write(body);
-          count++;
+          try {
+            client.write(body);
+            count++;
+          }
+          catch (err) {
+            deadClients.push(client);
+          }
       });
+      // Clean up any dead clients
+      if (deadClients.length > 0) {
+        deadClients.forEach(function(client) {
+            cleanup(client);
+        });
+        console.log('Cleaned up ' + deadClients.length + ' dead clients');
+      }
       response.writeHead(200);
   		response.end();
     }
