@@ -150,7 +150,7 @@ function readRequestBody(request, callback) {
 		body += chunk;
 	});
 	request.on('end', function() {
-		callback(body.replace(/(\r\n|\n|\r)/gm,""));
+		callback(body.replace(/(\r\n|\n|\r)/gm,"") + '\n');
 	});
 }
 
