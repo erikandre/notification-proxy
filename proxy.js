@@ -169,7 +169,18 @@ function readRequestBody(request, callback) {
 
 function serveStats(response) {
   response.writeHeader(200);
-	response.write('Connected clients: ' + clients.length, 'utf8');
+  var buffer = clients.length + ' clients connected\n';
+  clients.forEach(function(client) {
+    buffer += client.remoteAddress + ' - ';
+    if (client2id.hasOwnProperty(client)) {
+      buffer += client2id[client];
+    }
+    else {
+      buffer += 'No registrations';
+    }
+    buffer += '\n';
+  });
+	response.write(buffer);
   response.end();
 }
 
