@@ -13,7 +13,6 @@ args.splice(0, 2); // Remove 'node' and the name of the script
 
 var clients = [];
 var id2clients = {};
-var client2id = {};
 
 if (args.length < 1) {
   console.error('Usage:');
@@ -61,6 +60,7 @@ http.createServer(
       }
     }
     catch (err) {
+      throw err;
       console.error(err);
       response.writeHead(500);
       response.end();
@@ -170,16 +170,14 @@ function readRequestBody(request, callback) {
 function serveStats(response) {
   response.writeHeader(200);
   var buffer = clients.length + ' clients connected\n';
-  clients.forEach(function(client) {
-    buffer += client.remoteAddress + ' - ';
-    if (client2id.hasOwnProperty(client)) {
-      buffer += client2id[client];
+  for (var id in id2clients) {
+    if (id2clients.hasOwnProperty(id)) {
+        buffer += id + ' - ';
+        id2clients[id].forEach(function(client) {
+            buffer += client.remoteAddress + ' ';
+        });
     }
-    else {
-      buffer += 'No registrations';
-    }
-    buffer += '\n';
-  });
+  }
 	response.write(buffer);
   response.end();
 }
@@ -191,10 +189,6 @@ function processClientCommand(command, client) {
       id2clients[id] = [];
     }
     id2clients[id].push(client);
-    if (!client2id.hasOwnProperty(client)) {
-      client2id[client] = [];
-    }
-    client2id[client].push(id);
   }
 }
 
@@ -210,20 +204,10 @@ function getClientsForId(id) {
 function cleanup(client) {
   // Unregister client
   removeClientFromList(clients, client);
-  // Remove registrations for client
-  if (client2id.hasOwnProperty(client)) {
-    var count = 0; // Count number of registrations removed
-    client2id[client].forEach(function(id) {
-      if (id2clients.hasOwnProperty(id)) {
-        var clients = id2clients[id];
-        count += removeClientFromList(clients, client);
-      }
-    });
-    console.log('Removed ' + count + ' registrations');
-    delete client2id[client];
-  }
-  else {
-    console.log('Client has no registrations');
+  for (var id in id2clients) {
+    if (id2clients.hasOwnProperty(id)) {
+        removeClientFromList(id2clients[id], client);
+    }
   }
 }
 
