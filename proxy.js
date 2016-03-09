@@ -107,7 +107,7 @@ function handleNotify(url, request, response) {
   readRequestBody(request, function(body) {
     var count = 0;
     var clients = getClientsForId(id);
-    if (clients != null) {
+    if (clients != null && clients.length > 0) {
       var deadClients = [];
       clients.forEach(function(client) {
           try {
