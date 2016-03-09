@@ -176,6 +176,7 @@ function serveStats(response) {
         id2clients[id].forEach(function(client) {
             buffer += client.remoteAddress + ' ';
         });
+        buffer += '\n';
     }
   }
 	response.write(buffer);
