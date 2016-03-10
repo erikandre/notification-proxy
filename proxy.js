@@ -204,22 +204,28 @@ function getClientsForId(id) {
 
 function cleanup(client) {
   // Unregister client
-  removeClientFromList(clients, client);
+  if (!removeClientFromList(clients, client)) {
+    console.error('Could not remove client from master list');
+  }
+  var count = 0;
   for (var id in id2clients) {
     if (id2clients.hasOwnProperty(id)) {
-        removeClientFromList(id2clients[id], client);
+        if (removeClientFromList(id2clients[id], client)) {
+          console.log('Removed registration with id: ' + id);
+          count++;
+        }
     }
   }
+  console.log('Removed ' + count + ' registrations');
 }
 
 function removeClientFromList(list, client) {
   var index = list.indexOf(client);
   if (index == -1) {
-    console.error('Could not remove client from list');
-    return 0;
+    return false;
   }
   else {
     list.splice(index, 1);
-    return 1;
+    return true;
   }
 }
