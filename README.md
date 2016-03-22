@@ -1,6 +1,6 @@
 # Notification Proxy
 
-**PLEASE NOTE:** This software is not meant for production use. It's just a prototyping tool (I developed it to be able to send socket notifications from a Parse server).
+**PLEASE NOTE:** This software is not meant for production use. It's just a prototyping tool (that I developed it to be able to send socket notifications from a Parse server).
 
 A proxy for sending notifications to multiple clients, connected over socket connections based, on http requests.
 By default the proxy opens two ports:
@@ -19,6 +19,19 @@ forever proxy.js <access key>
 
 ## Client protocol
 
+To register to recieve notifications for a certain id, the client should send the following JSON payload.
+
+```json
+{
+  "type":"register",
+  "value":"<id>"
+}
+```
+
 ## Control protocol
 
+To send a notification to users registered with a certain id, perform a POST to port 9001 using the following URL and the body containing the notification payload (which could be whatever you want it to be):
 
+```
+/notify?key=<access key specified when starting server>&id=<client registration id>
+```
